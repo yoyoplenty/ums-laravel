@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\ErrorResponse;
 use Exception;
 
 use Illuminate\Support\Carbon;
@@ -14,6 +15,7 @@ use App\Http\Requests\ResetPasswordFormRequest;
 use App\Http\Requests\UserFormRequest;
 use App\Http\Trait\UserDetailsTrait;
 use App\Repositories\PasswordRepository as Password;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends ApiController {
 
@@ -97,14 +99,15 @@ class AuthController extends ApiController {
 
     public function login(LoginFormRequest $request) {
         try {
-            $credentials = request(['email', 'password']);
-            (auth()->attempt($credentials)) ?: abort(response()->json('Invalid credentials', 422));
+            ['email' => $email, 'password' => $password, 'role_id' => $roleId] = $request->all();
 
-            $user = auth()->user();
-            $token = $user->createToken('smsApiToken')->plainTextToken;
+            $user = $this->user->findByField('email', $email)->first();
+            if (!Hash::check($password, $user->password)) throw new ErrorResponse("invalid password provided");
 
             ($user->verified == 1) ?: abort(response()->json('Please check your email to verify your account!!!', 405));
-            ($user->role_id == $request->role_id) ?: abort(response()->json('Invalid role id provided', 404));
+            ($user->role_id == $roleId) ?: abort(response()->json('Invalid role id provided', 404));
+
+            $token = $user->createToken('smsApiToken')->plainTextToken;
 
             return $this->getUser($user, $token);
         } catch (\PDOException $ex) {
@@ -153,7 +156,8 @@ class AuthController extends ApiController {
             return response()->json(trans('Not found!'), 404);
 
         ($user->verified == 0) ?: abort(response()->json('User already Verified Please Login!!!', 406));
-        ($this->verifyTimeDiff($user->verification_code_generated_at)) ?: abort(response()->json('Activation link has expired. Please request a new activation link', 421));
+        ($this->verifyTimeDiff($user->verification_code_generated_at))
+            ?: abort(response()->json('Activation link has expired. Please request a new activation link', 421));
 
         $user = $this->user->updateEntity([
             'verified' => 1,

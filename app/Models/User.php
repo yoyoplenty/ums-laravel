@@ -43,7 +43,7 @@ class User extends Authenticatable {
     public function isAdmin(): bool {
         $role_super_admin = Role::where('slug', 'super-admin')->first();
 
-        if ($this->role_id === $role_super_admin->id) return true;
+        if ($this->role_id === optional($role_super_admin)->id) return true;
 
         else return false;
     }

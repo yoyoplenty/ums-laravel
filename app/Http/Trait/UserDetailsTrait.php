@@ -12,7 +12,7 @@ trait UserDetailsTrait {
     /**
      * Gererate UUID
      * 
-     * @return string
+     * @return array
      */
     protected function generateUserDetails(array $payload): array {
         // Generating user details....

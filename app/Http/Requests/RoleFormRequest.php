@@ -9,7 +9,7 @@ class RoleFormRequest extends FormRequest {
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool {
-        return false;
+        return true;
     }
 
     /**
@@ -19,7 +19,7 @@ class RoleFormRequest extends FormRequest {
      */
     public function rules(): array {
         return [
-            //
+            "title" => 'required|string|unique:roles|min:4|max:25',
         ];
     }
 }

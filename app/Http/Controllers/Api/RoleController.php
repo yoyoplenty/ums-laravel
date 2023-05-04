@@ -11,7 +11,6 @@ class RoleController extends ApiController {
 
     public function __construct(private Role $role) {
         $this->middleware('acceptjson', ['only' => ['store', 'update']]);
-
         $this->middleware('auth');
         $this->middleware('role:admin,super-admin');
     }
@@ -80,7 +79,8 @@ class RoleController extends ApiController {
 
             return $this->sendResponse(
                 new RoleResource($role),
-                "successfully created role"
+                "successfully created role",
+                201
             );
         } catch (Exception $ex) {
             return $this->sendError($ex, 'There was a problem creating role', 500);
