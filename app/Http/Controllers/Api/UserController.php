@@ -40,7 +40,7 @@ class UserController extends ApiController {
 
             return $this->sendResponse(UserResource::collection($roles), "successfully fetched users");
         } catch (Exception $ex) {
-            return $this->sendError($ex, 'Error encountered', 500);
+            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
         }
     }
 
@@ -131,7 +131,7 @@ class UserController extends ApiController {
 
             return $this->sendResponse(new UserResource($user));
         } catch (Exception $ex) {
-            return $this->sendError($ex, 'unable to update user details', 500);
+            return $this->sendError($ex->getMessage(), 'unable to update user details', 500);
         }
     }
 
@@ -171,7 +171,7 @@ class UserController extends ApiController {
 
             return $this->sendResponse(new UserResource(null, 'User deleted successfully'));
         } catch (Exception $ex) {
-            return $this->sendError($ex, 'unable to delete user details', 500);
+            return $this->sendError($ex->getMessage(), 'unable to delete user details', 500);
         }
     }
 }

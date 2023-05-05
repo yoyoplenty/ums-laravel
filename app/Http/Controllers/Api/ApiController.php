@@ -33,7 +33,8 @@ class ApiController extends BaseController {
      */
     public function sendError($error, $errorMessages = 'An error occured', $code = 422) {
         $response = [
-            'message' => $error ?: $errorMessages,
+            'message' =>  $errorMessages,
+            'error' => $error,
             'success' => false,
         ];
 

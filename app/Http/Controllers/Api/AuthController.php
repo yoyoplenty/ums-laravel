@@ -50,7 +50,7 @@ class AuthController extends ApiController {
 
             return $this->sendResponse($data, "successfully registered user");
         } catch (Exception $ex) {
-            return $this->sendError($ex, 'Error encountered', 500);
+            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
         }
     }
 
@@ -86,7 +86,7 @@ class AuthController extends ApiController {
 
             return $this->sendResponse($data, "successfully logged in user");
         } catch (Exception $ex) {
-            return $this->sendError($ex, 'Error encountered', 500);
+            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
         }
     }
 
