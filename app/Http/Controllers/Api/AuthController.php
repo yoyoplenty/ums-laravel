@@ -2,37 +2,26 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Exceptions\ErrorResponse;
 use Exception;
 
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\LoginFormRequest;
 use App\Http\Controllers\Api\ApiController;
-use App\Repositories\UserRepository as User;
-use App\Repositories\RoleRepository as Role;
-use App\Http\Requests\ResetPasswordFormRequest;
 use App\Http\Requests\UserFormRequest;
+use App\Http\Services\AuthService;
 use App\Http\Trait\UserDetailsTrait;
-use App\Repositories\PasswordRepository as Password;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends ApiController {
 
     use UserDetailsTrait;
 
-    public function __construct(private User $user, private Role $role, private Password $password) {
+    public function __construct(private AuthService $authService) {
         $this->middleware('acceptjson', ['only' => ['login', 'resetPassword']]);
-
         $this->middleware('auth', ['only' => ['logout']]);
     }
 
-
-
-
     /**
      * @OA\Post(
-     *     path="api/v1/register",
+     *     path="/register",
      *     tags={"Auth"},
      *     summary="Register user",
      *     description="This can only be done by an guest.",
@@ -55,22 +44,13 @@ class AuthController extends ApiController {
      */
 
     public function register(UserFormRequest $request) {
-        $requestPayload = $request->safe()->except('role_id');
-        $payload = $this->generateUserDetails($requestPayload);
-
         try {
-            $role = $this->role->findWhere(['slug' => 'user'])->first();
-            $payload['role_id'] = $role->id;
+            $data = $this->authService->register($request->all());
 
-            $user = $this->user->create($payload);
+            return $this->sendResponse($data, "successfully registered user");
         } catch (Exception $ex) {
-            $user->delete();
-            return response()->json(['message' => 'There was a problem registering user' . $ex], 500);
+            return $this->sendError($ex, 'Error encountered', 500);
         }
-
-        $activation_link = env('APP_URL') . '/api/v1/' . $user->email . '/verify/' . $user->verification_code;
-
-        return $activation_link;
     }
 
 
@@ -78,6 +58,8 @@ class AuthController extends ApiController {
      * @OA\Post(
      *     path="login",
      *     tags={"Auth"},
+     *     summary="Login a User",
+     *     description="This can be done by a guest user",
      *     operationId="userLogin",
      *     description="Login in a User",
      *     @OA\RequestBody(
@@ -99,25 +81,15 @@ class AuthController extends ApiController {
 
     public function login(LoginFormRequest $request) {
         try {
-            ['email' => $email, 'password' => $password, 'role_id' => $roleId] = $request->all();
+            $data = $this->authService->login($request->all());
 
-            $user = $this->user->findByField('email', $email)->first();
-            if (!Hash::check($password, $user->password)) throw new ErrorResponse("invalid password provided");
-
-            ($user->verified == 1) ?: abort(response()->json('Please check your email to verify your account!!!', 405));
-            ($user->role_id == $roleId) ?: abort(response()->json('Invalid role id provided', 404));
-
-            $token = $user->createToken('smsApiToken')->plainTextToken;
-
-            return $this->getUser($user, $token);
-        } catch (\PDOException $ex) {
-            return response()->json('Error occured please contact admin: ' . $ex, 500);
+            return $this->sendResponse($data, "successfully logged in user");
+        } catch (Exception $ex) {
+            return $this->sendError($ex, 'Error encountered', 500);
         }
     }
 
-
     /**
-     * Verify a user account.
      *
      * @OA\Get(
      *     path="/{email}/verify/{verification_code}",
@@ -150,35 +122,16 @@ class AuthController extends ApiController {
      *       ),
      * )
      */
+
     public function verify($email, $verificationCode) {
-        $user = $this->user->findByField('email', $email)->first();
-        if (!$user || $user->verification_code !== $verificationCode)
-            return response()->json(trans('Not found!'), 404);
+        try {
+            $data = $this->authService->verifyEmail($email, $verificationCode);
 
-        ($user->verified == 0) ?: abort(response()->json('User already Verified Please Login!!!', 406));
-        ($this->verifyTimeDiff($user->verification_code_generated_at))
-            ?: abort(response()->json('Activation link has expired. Please request a new activation link', 421));
-
-        $user = $this->user->updateEntity([
-            'verified' => 1,
-            'verified_at' => now()
-        ], $user->id);
-
-        $token = auth()->user()->createToken('smsApiToken')->plainTextToken;
-
-        return $this->getUser($user, $token);
+            return $this->sendResponse($data, "successfully verified user user");
+        } catch (Exception $ex) {
+            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
+        }
     }
-
-    private function getUser($user, $token) {
-        return response()->json(
-            [
-                'user' => $user->withoutRelations(),
-                'token' => $token
-            ],
-            200
-        );
-    }
-
 
     /**
      * Resend verification link.
@@ -208,23 +161,12 @@ class AuthController extends ApiController {
      */
 
     public function resendVerification($email) {
-        $user = $this->user->findByField('email', $email)->first();
-
-        ($user) ?: abort(response()->json('Not found', 422));
-        ($user->verified == 0) ?: abort(response()->json('User already verified!', 406));
-
         try {
-            $updateUser = $this->user->updateEntityUuid(
-                [
-                    'verification_code' => $this->generateVerificationCode(),
-                    'verification_code_generated_at' => now()
-                ],
-                $user->uuid
-            );
+            $data = $this->authService->resendVerificationEmail($email);
 
-            return response()->json(['message' => 'Verification email sent!']);
+            return $this->sendResponse($data, "successfully resent email");
         } catch (Exception $ex) {
-            return response()->json(['message' => 'unable to send reactivation code' . $ex], 500);
+            return $this->sendError($ex, 'Error encountered', 500);
         }
     }
 
@@ -255,6 +197,9 @@ class AuthController extends ApiController {
      *       ),
      * )
      */
+
+    /*
+
     public function forgotPassword($email) {
         $user = $this->user->findByField('email', $email)->first();
 
@@ -281,6 +226,7 @@ class AuthController extends ApiController {
         }
     }
 
+    */
 
     /**
      * Reset User password.
@@ -297,6 +243,9 @@ class AuthController extends ApiController {
      *     @OA\Response(response=200,description="successful operation"),
      * )
      */
+
+    /*
+
     public function resetPassword(ResetPasswordFormRequest $request, $email) {
         ($tokenData = $this->password->findByField('email', $email)->first()) ?: abort(response()->json('Email does not exist', 422));
 
@@ -314,6 +263,8 @@ class AuthController extends ApiController {
         }
     }
 
+    
+    */
 
     /**
      * @OA\Get(
@@ -334,6 +285,7 @@ class AuthController extends ApiController {
      *     },
      * )
      */
+
 
     public function logout() {
         auth()->logout();

@@ -1,18 +1,19 @@
 <?php
 
+
 return [
     'default' => 'default',
     'documentations' => [
         'default' => [
             'api' => [
-                'title' => 'L5 Swagger UI',
+                'title' => 'UMS Swagger API Documentation',
             ],
 
             'routes' => [
                 /*
                  * Route for accessing api documentation interface
                 */
-                'api' => 'api/documentation',
+                'api' => 'api/doc',
             ],
             'paths' => [
                 /*
