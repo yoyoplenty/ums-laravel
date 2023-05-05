@@ -6,6 +6,7 @@ use Exception;
 
 use App\Http\Requests\LoginFormRequest;
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Requests\ResetPasswordFormRequest;
 use App\Http\Requests\UserFormRequest;
 use App\Http\Services\AuthService;
 use App\Http\Trait\UserDetailsTrait;
@@ -56,7 +57,7 @@ class AuthController extends ApiController {
 
     /**
      * @OA\Post(
-     *     path="login",
+     *     path="/login",
      *     tags={"Auth"},
      *     summary="Login a User",
      *     description="This can be done by a guest user",
@@ -94,8 +95,9 @@ class AuthController extends ApiController {
      * @OA\Get(
      *     path="/{email}/verify/{verification_code}",
      *     tags={"Auth"},
+     *     summary="Verify a User Email Address",
+     *     description="This can be done by a guest user",
      *     operationId="verifyUser",
-     *     description="Verify a User",
      *     @OA\Parameter(
      *         name="email",
      *         in="path",
@@ -127,7 +129,7 @@ class AuthController extends ApiController {
         try {
             $data = $this->authService->verifyEmail($email, $verificationCode);
 
-            return $this->sendResponse($data, "successfully verified user user");
+            return $this->sendResponse($data, "successfully verified user");
         } catch (Exception $ex) {
             return $this->sendError($ex->getMessage(), 'Error encountered', 500);
         }
@@ -139,8 +141,9 @@ class AuthController extends ApiController {
      * @OA\Get(
      *     path="/{email}/resend_verification_code",
      *     tags={"Auth"},
-     *     operationId="resendVerification",
+     *     summary="Resend verification Link",
      *     description="Resend verification link",
+     *     operationId="resendVerification",
      *     @OA\Parameter(
      *         name="email",
      *         in="path",
@@ -166,10 +169,9 @@ class AuthController extends ApiController {
 
             return $this->sendResponse($data, "successfully resent email");
         } catch (Exception $ex) {
-            return $this->sendError($ex, 'Error encountered', 500);
+            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
         }
     }
-
 
     /**
      * Forgot Password.
@@ -177,6 +179,8 @@ class AuthController extends ApiController {
      * @OA\Get(
      *     path="/{email}/forgot_password",
      *     tags={"Auth"},
+     *     summary="Send Forgot Password Email",
+     *     description="This can be done by a guest user, to reset password",
      *     operationId="forgotPassword",
      *     description="Sends mail containing token to users who forgot their password",
      *     @OA\Parameter(
@@ -198,35 +202,15 @@ class AuthController extends ApiController {
      * )
      */
 
-    /*
-
     public function forgotPassword($email) {
-        $user = $this->user->findByField('email', $email)->first();
-
-        ($user) ?: abort(response()->json(['message' => 'Data not Found'], 404));
-
-        ($user->verify = true) ?: abort(response()->json(['message' => 'Unverified Account'], 403));
-
         try {
-            $passwordResetPayload = $this->password->updateOrCreate(['email' => $email], [
-                'email' => $email,
-                'token' => $this->generateIdentity(),
-                'created_at' => Carbon::now()
-            ]);
+            $data = $this->authService->forgotPassword($email);
 
-            $this->user->updateEntity(['password' => ''], $user->id);
-
-            if ($this->sendEmail('reset_password', $user, $passwordResetPayload->token)) {
-
-                return response()->json(['message' => trans('A reset link has been sent to your email address.')], 200);
-            }
+            return $this->sendResponse($data, "successfully sent forgot password email");
         } catch (Exception $ex) {
-
-            return response()->json(['message' => 'A Network Error occurred. Please try again' . $ex], 500);
+            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
         }
     }
-
-    */
 
     /**
      * Reset User password.
@@ -234,6 +218,8 @@ class AuthController extends ApiController {
      * @OA\Post(
      *     path="/{email}/reset_password",
      *     tags={"Auth"},
+     *     summary="Reset User Password",
+     *     description="This can be done by a guest user",
      *     operationId="resetUserPassword",
      *     description="Reset a user's password",
      *     @OA\Parameter(name="passwordreset",in="query",required=true,
@@ -244,34 +230,23 @@ class AuthController extends ApiController {
      * )
      */
 
-    /*
-
     public function resetPassword(ResetPasswordFormRequest $request, $email) {
-        ($tokenData = $this->password->findByField('email', $email)->first()) ?: abort(response()->json('Email does not exist', 422));
-
-        ($user = $this->user->findWhere(['email' => $tokenData->email, 'verified' => 1])->first() ?: abort(response()->json('Email not verified', 422)));
-        ($this->verifyTimeDiff($tokenData->created_at)) ?: abort(response()->json(['message' => 'Code Expired'], 422));
-
         try {
-            $user = $this->user->updateEntity(['password' => $request->password], $user->id);
-            $this->password->deleteWhere(['token' => $request->token]);
-            $token = auth()->login($user);
-            return $this->getUser($user, $token);
-        } catch (Exception $ex) {
+            $data = $this->authService->resetPassword($email, $request->all());
 
-            return response()->json(['message' => trans('A network error occurred. Please try again.' . $ex)] . 408);
+            return $this->sendResponse($data, "Password reset successful");
+        } catch (Exception $ex) {
+            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
         }
     }
 
-    
-    */
-
     /**
-     * @OA\Get(
+     * @OA\Post(
      *     path="/logout",
      *     tags={"Auth"},
-     *     operationId="userLogout",
+     *     summary="Logout a User",
      *     description="Logout a user",
+     *     operationId="userLogout",
      *     @OA\Response(
      *         response=401,
      *         description="Unathorize Access"
@@ -286,10 +261,13 @@ class AuthController extends ApiController {
      * )
      */
 
-
     public function logout() {
-        auth()->logout();
+        try {
+            $data = $this->authService->logout();
 
-        return response()->json(['message' => 'Successfully logged out'], 200);
+            return $this->sendResponse($data, "Logout Successful");
+        } catch (Exception $ex) {
+            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
+        }
     }
 }

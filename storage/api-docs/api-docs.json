@@ -55,11 +55,12 @@
                 }
             }
         },
-        "login": {
+        "/login": {
             "post": {
                 "tags": [
                     "Auth"
                 ],
+                "summary": "Login a User",
                 "description": "Login in a User",
                 "operationId": "userLogin",
                 "requestBody": {
@@ -95,7 +96,6 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Verify a user account.",
                 "description": "Verify a User",
                 "operationId": "verifyUser",
                 "parameters": [
@@ -141,62 +141,6 @@
                         "required": true,
                         "schema": {
                             "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "401": {
-                        "description": "Unathorize Access"
-                    },
-                    "200": {
-                        "description": "successful operation"
-                    }
-                }
-            }
-        },
-        "/{email}/forgot_password": {
-            "get": {
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Forgot Password.",
-                "description": "Sends mail containing token to users who forgot their password",
-                "operationId": "forgotPassword",
-                "parameters": [
-                    {
-                        "name": "email",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "401": {
-                        "description": "Unathorize Access"
-                    },
-                    "200": {
-                        "description": "successful operation"
-                    }
-                }
-            }
-        },
-        "/{email}/reset_password": {
-            "post": {
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Reset User password.",
-                "description": "Reset a user's password",
-                "operationId": "resetUserPassword",
-                "parameters": [
-                    {
-                        "name": "passwordreset",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/components/schemas/PasswordReset"
                         }
                     }
                 ],

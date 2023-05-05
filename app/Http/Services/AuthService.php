@@ -12,7 +12,8 @@ class AuthService {
 
     public function __construct(
         private UserService $userService,
-        private RoleService $roleService
+        private RoleService $roleService,
+        private PasswordService $passwordService,
     ) {
     }
 
@@ -77,5 +78,42 @@ class AuthService {
         $activation_link = env('APP_URL') . '/api/v1/' . $user->email . '/verify/' . $code;
         //TODO SEND EMAIL
         return $activation_link;
+    }
+
+    public function forgotPassword(string $email) {
+        $user = $this->userService->findOne(['email' => $email]);
+        if (!$user->verified) throw new ErrorResponse('Unverified account', 401);
+
+        $this->passwordService->upsert(['email' => $email], [
+            'token' => $this->generateIdentity(),
+            'created_at' => now()
+        ]);
+
+        $this->userService->update($user->id, ['password' => '']);
+
+        return $user;
+    }
+
+
+    public function resetPassword($email, array $payload) {
+        $passwordData = $this->passwordService->findOne(['email' => $email]);
+        if (!$passwordData) throw new ErrorResponse('Password Data Not found', 404);
+
+        $user = $this->userService->findOne(['email' => $passwordData->email, 'verified' => 1]);
+        if (!$user) throw new ErrorResponse('Email not verified', 422);
+
+        if (!$this->verifyTimeDiff($passwordData->created_at))
+            throw new ErrorResponse('Code Expired', 422);
+
+        $this->userService->update($user->id, ['password' => $payload['password']]);
+        $passwordData->delete();
+
+        $token = $user->createToken('smsApiToken')->plainTextToken;
+
+        return array('user' => $user, 'token' => $token);
+    }
+
+    public function logout() {
+        return auth()->logout();
     }
 }
