@@ -10,6 +10,7 @@ use App\Http\Services\UserService;
 class UserController extends ApiController {
     public function __construct(private UserService $userService) {
         $this->middleware('acceptjson', ['only' =>  'update']);
+        $this->middleware('auth');
         $this->middleware('role:admin,super-admin', ['only' => ['index']]);
     }
 

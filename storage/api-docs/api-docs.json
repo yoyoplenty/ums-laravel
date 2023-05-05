@@ -96,7 +96,8 @@
                 "tags": [
                     "Auth"
                 ],
-                "description": "Verify a User",
+                "summary": "Verify a User Email Address",
+                "description": "This can be done by a guest user",
                 "operationId": "verifyUser",
                 "parameters": [
                     {
@@ -131,7 +132,7 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Resend verification link.",
+                "summary": "Resend verification Link",
                 "description": "Resend verification link",
                 "operationId": "resendVerification",
                 "parameters": [
@@ -154,11 +155,68 @@
                 }
             }
         },
-        "/logout": {
+        "/{email}/forgot_password": {
             "get": {
                 "tags": [
                     "Auth"
                 ],
+                "summary": "Send Forgot Password Email",
+                "description": "Sends mail containing token to users who forgot their password",
+                "operationId": "forgotPassword",
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "description": "Unathorize Access"
+                    },
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/{email}/reset_password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Reset User Password",
+                "description": "Reset a user's password",
+                "operationId": "resetUserPassword",
+                "parameters": [
+                    {
+                        "name": "passwordreset",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/PasswordReset"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "description": "Unathorize Access"
+                    },
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout a User",
                 "description": "Logout a user",
                 "operationId": "userLogout",
                 "responses": {
