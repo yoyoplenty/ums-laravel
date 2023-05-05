@@ -32,7 +32,7 @@ class AuthController extends ApiController {
 
     /**
      * @OA\Post(
-     *     path="/register",
+     *     path="api/v1/register",
      *     tags={"Auth"},
      *     summary="Register user",
      *     description="This can only be done by an guest.",

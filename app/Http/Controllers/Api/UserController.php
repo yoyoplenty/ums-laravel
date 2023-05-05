@@ -2,25 +2,20 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Requests\DeleteFormRequest;
 use App\Http\Requests\UserFormRequest;
 use Exception;
-use App\Repositories\RoleRepository as Role;
-use App\Repositories\UserRepository as User;
 use App\Http\Resources\UserResource;
-use Illuminate\Http\Request;
+use App\Http\Services\UserService;
 
 class UserController extends ApiController {
-    public function __construct(private User $user, private Role $role) {
-        $this->middleware('acceptjson', ['only' => ['store', 'update', 'destroy']]);
-
-        $this->middleware('auth', ['except' => ['store']]);
-        $this->middleware('role:admin,super-admin', ['only' => ['index', 'destroy']]);
+    public function __construct(private UserService $userService) {
+        $this->middleware('acceptjson', ['only' =>  'update']);
+        $this->middleware('role:admin,super-admin', ['only' => ['index']]);
     }
 
     /**
      * @OA\Get(
-     *     path="/users?role=Admin,",
+     *     path="/users",
      *     summary="Get all users",
      *     operationId="getAllUsers",
      *     tags={"User"},
@@ -37,15 +32,15 @@ class UserController extends ApiController {
      *     ),
      * )
      */
-    public function index($perPage = 15) {
-        if ($query = request()->query('role') != null) {
-            $role = $this->role->where('title', $query)->first();
-            ($role) ?: abort(response()->json('Not found', 404));
-            (count($role->users) >= 1) ?: abort(response()->json('No content', 206));
-            return UserResource::collection($role->users);
+
+    public function index() {
+        try {
+            $roles = $this->userService->findAll();
+
+            return $this->sendResponse(UserResource::collection($roles), "successfully fetched users");
+        } catch (Exception $ex) {
+            return $this->sendError($ex, 'Error encountered', 500);
         }
-        $users = $this->user->all();
-        return UserResource::collection($users);
     }
 
 
@@ -78,18 +73,16 @@ class UserController extends ApiController {
      *     ),
      * )
      */
+
     public function show($uuid) {
         try {
-            $user = $this->user->findByField('uuid', $uuid)->first();
-            if (!$user)  return response()->json(['message' => 'Not found'], 404);
+            $user = $this->userService->findOne(['uuid' => $uuid]);
 
             return $this->sendResponse(new UserResource($user));
         } catch (Exception $ex) {
-
-            return response()->json(['message' => 'unable to fetch user' . $ex], 500);
+            return $this->sendError($ex->getMessage(), 'unable to fetch user', 500);
         }
     }
-
 
     /**
      * @OA\Patch(
@@ -117,7 +110,7 @@ class UserController extends ApiController {
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Role not found"
+     *         description="User not found"
      *     ),
      *     @OA\Response(
      *         response="422",
@@ -130,37 +123,54 @@ class UserController extends ApiController {
      *     )
      * )
      */
-    public function update(UserFormRequest $request, $uuid) {
-        ($uuid = $request->uuid) ?: abort(response()->json(['message' => 'invalid credentials'], 406));
-        $user = $this->user->findByField('$uuid', $uuid)->first();
-        ($user) ?: abort(response()->json('Data not found', 404));
-        try {
-            $updateUser = $this->user->updateEntityUuid($request->validated(), $uuid);
 
-            return $this->sendResponse(new UserResource($updateUser));
+    public function update(UserFormRequest $request, $uuid) {
+        try {
+            $user = $this->userService->updateUser($uuid, $request->validated());
+
+            return $this->sendResponse(new UserResource($user));
         } catch (Exception $ex) {
-            return response()->json(['message' => 'unable to update user details' . $ex], 500);
+            return $this->sendError($ex, 'unable to update user details', 500);
         }
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/users/{user_uuid}",
+     *     tags={"User"},
+     *     summary="Delete user details",
+     *     description="This can only be done by an admin or auth user.",
+     *     operationId="deleteUser",
+     *     @OA\Parameter(
+     *         name="uuid",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad request",
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="User not found",
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successfull operation",
+     *     )
+     * )
+     */
 
-
-    public function _destory(Request $request, $uuid) {
+    public function destroy($uuid) {
         try {
-            $user = $this->user->findByField('uuid', $uuid)->first();
+            $this->userService->deleteUser($uuid);
 
-            if (!$user || $uuid != $request->uuid) {
-                return response()->json(['message' => 'user not found'], 404);
-            }
-
-            $user['email'] = $user->email . '_deleted';
-            $user['username'] = $user->username . '_deleted';
-            $user->update();
-            $user->delete();
-            return response()->json(['message' => 'User successfully deleted.'], 200);
+            return $this->sendResponse(new UserResource(null, 'User deleted successfully'));
         } catch (Exception $ex) {
-
-            return response()->json('Unable to delete user please contact admin for support with the following details Error: ' . $ex, 500);
+            return $this->sendError($ex, 'unable to delete user details', 500);
         }
     }
 }

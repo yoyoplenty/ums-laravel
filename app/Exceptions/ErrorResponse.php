@@ -21,6 +21,7 @@ class ErrorResponse extends Exception {
     /**
      * Render the exception into an HTTP response.
      */
+
     public function render(Request $request): JsonResponse {
         return new JsonResponse([
             "message" => $this->getMessage(),

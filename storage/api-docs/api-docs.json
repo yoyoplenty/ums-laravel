@@ -20,7 +20,7 @@
     ],
     "paths": {
         "/api": {},
-        "/register": {
+        "api/v1/register": {
             "post": {
                 "tags": [
                     "Auth"
@@ -410,7 +410,7 @@
                 }
             }
         },
-        "/users?role=Admin,": {
+        "/users": {
             "get": {
                 "tags": [
                     "User"
@@ -470,6 +470,35 @@
                         "description": "Role not found"
                     }
                 }
+            },
+            "delete": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Delete user details",
+                "description": "This can only be done by an admin or auth user.",
+                "operationId": "deleteUser",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "404": {
+                        "description": "User not found"
+                    },
+                    "200": {
+                        "description": "Successfull operation"
+                    }
+                }
             }
         },
         "/users/{uuid}": {
@@ -506,7 +535,7 @@
                         "description": "bad request"
                     },
                     "404": {
-                        "description": "Role not found"
+                        "description": "User not found"
                     },
                     "422": {
                         "description": "Unprocessible Entity"

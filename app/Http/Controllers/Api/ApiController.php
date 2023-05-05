@@ -23,7 +23,7 @@ use App\Http\Trait\IdentityTrait;
  * )
  *
  * @OA\Server(
- *      url=L5_SWAGGER_CONST_HOST,
+ *      url='localhost:8000/api/v1/',
  *      description="Demo API Server"
  * )
  * 
@@ -131,13 +131,11 @@ class ApiController extends BaseController {
      *
      * @return \Illuminate\Http\Response
      */
-    public function sendError($error, $errorMessages = [], $code = 404) {
+    public function sendError($error, $errorMessages = 'An error occured', $code = 422) {
         $response = [
+            'message' => empty($error) ?: $errorMessages,
             'success' => false,
-            'message' => $error,
         ];
-
-        if (!empty($errorMessages)) $response['data'] = $errorMessages;
 
         return response()->json($response, $code);
     }

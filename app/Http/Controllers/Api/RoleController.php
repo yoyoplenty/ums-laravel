@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Repositories\RoleRepository as Role;
 use App\Http\Requests\RoleFormRequest;
 use App\Http\Resources\RoleResource;
+use App\Http\Services\RoleService;
 use Exception;
 
 class RoleController extends ApiController {
 
-    public function __construct(private Role $role) {
+    public function __construct(private RoleService $roleService) {
         $this->middleware('acceptjson', ['only' => ['store', 'update']]);
         $this->middleware('auth');
         $this->middleware('role:admin,super-admin');
@@ -36,12 +36,9 @@ class RoleController extends ApiController {
 
     public function index() {
         try {
-            $roles = $this->role->all();
+            $roles = $this->roleService->findAll();
 
-            return $this->sendResponse(
-                RoleResource::collection($roles),
-                "successfully fetched roles"
-            );
+            return $this->sendResponse(RoleResource::collection($roles), "successfully fetched roles");
         } catch (Exception $ex) {
             return $this->sendError($ex, 'Error encountered', 500);
         }
@@ -74,8 +71,7 @@ class RoleController extends ApiController {
 
     public function store(RoleFormRequest $request) {
         try {
-            $payload = $request->validated();
-            $role = $this->role->create($payload);
+            $role = $this->roleService->create($request->validated());
 
             return $this->sendResponse(
                 new RoleResource($role),
@@ -119,10 +115,13 @@ class RoleController extends ApiController {
      */
 
     public function show($id) {
-        $role = $this->role->find($id);
-        if (!$role) return response()->json([trans('Not Found')], 404);
+        try {
+            $role = $this->roleService->find($id);
 
-        return $this->sendResponse(new roleResource($role));
+            return $this->sendResponse(new roleResource($role));
+        } catch (Exception $ex) {
+            return $this->sendError($ex, 'unable to fetch role', 500);
+        }
     }
 
 
@@ -167,15 +166,14 @@ class RoleController extends ApiController {
      */
 
     public function update(RoleFormRequest $request, $id) {
-        $role = $this->role->find($id);
-        if (!$role) return response()->json([trans('Not Found')], 404);
+        try {
+            $role = $this->roleService->update($id, $request->validated());
 
-        $payload = $request->only('title', 'description');
-        $role = $this->role->update($payload, $id);
-
-        return $this->sendResponse(new RoleResource($role));
+            return $this->sendResponse(new RoleResource($role));
+        } catch (Exception $ex) {
+            return $this->sendError($ex, 'unable to fetch role', 500);
+        }
     }
-
 
     /**
      * @OA\Delete(
@@ -208,10 +206,12 @@ class RoleController extends ApiController {
      */
 
     public function destroy($id) {
-        $role = $this->role->find($id);
-        if (!$role) return response()->json([trans('Not Found')], 404);
+        try {
+            $this->roleService->delete($id);
 
-        $role->delete();
-        return $this->sendResponse(new RoleResource(null, 'Role deleted successfully'));
+            return $this->sendResponse(new RoleResource(null, 'Role deleted successfully'));
+        } catch (Exception $ex) {
+            return $this->sendError($ex, 'unable to delete role', 500);
+        }
     }
 }
