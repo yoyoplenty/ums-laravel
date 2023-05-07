@@ -20,6 +20,7 @@ class RoleFormRequest extends FormRequest {
     public function rules(): array {
         return [
             "title" => 'required|string|unique:roles|min:4|max:25',
+            "description" => 'sometimes|string|unique:roles',
         ];
     }
 }

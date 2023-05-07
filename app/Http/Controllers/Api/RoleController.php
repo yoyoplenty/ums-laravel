@@ -40,7 +40,7 @@ class RoleController extends ApiController {
 
             return $this->sendResponse(RoleResource::collection($roles), "successfully fetched roles");
         } catch (Exception $ex) {
-            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
+            return $this->sendError($ex->getMessage(), 'Error encountered');
         }
     }
 
@@ -79,7 +79,7 @@ class RoleController extends ApiController {
                 201
             );
         } catch (Exception $ex) {
-            return $this->sendError($ex->getMessage(), 'There was a problem creating role', 500);
+            return $this->sendError($ex->getMessage(), 'There was a problem creating role');
         }
     }
 
@@ -120,7 +120,7 @@ class RoleController extends ApiController {
 
             return $this->sendResponse(new roleResource($role));
         } catch (Exception $ex) {
-            return $this->sendError($ex->getMessage(), 'unable to fetch role', 500);
+            return $this->sendError($ex->getMessage(), 'unable to fetch role');
         }
     }
 
@@ -171,7 +171,7 @@ class RoleController extends ApiController {
 
             return $this->sendResponse(new RoleResource($role));
         } catch (Exception $ex) {
-            return $this->sendError($ex->getMessage(), 'unable to fetch role', 500);
+            return $this->sendError($ex->getMessage(), 'unable to update role');
         }
     }
 
@@ -211,7 +211,7 @@ class RoleController extends ApiController {
 
             return $this->sendResponse(new RoleResource(null, 'Role deleted successfully'));
         } catch (Exception $ex) {
-            return $this->sendError($ex->getMessage(), 'unable to delete role', 500);
+            return $this->sendError($ex->getMessage(), 'unable to delete role');
         }
     }
 }
