@@ -167,9 +167,9 @@ class RoleController extends ApiController {
 
     public function update(RoleFormRequest $request, $id) {
         try {
-            $role = $this->roleService->update($id, $request->validated());
+            $this->roleService->update($id, $request->validated());
 
-            return $this->sendResponse(new RoleResource($role));
+            return $this->sendResponse(new RoleResource(null), 'Successfully updated');
         } catch (Exception $ex) {
             return $this->sendError($ex->getMessage(), 'unable to update role');
         }
@@ -209,7 +209,7 @@ class RoleController extends ApiController {
         try {
             $this->roleService->delete($id);
 
-            return $this->sendResponse(new RoleResource(null, 'Role deleted successfully'));
+            return $this->sendResponse(new RoleResource(null), 'Role deleted successfully');
         } catch (Exception $ex) {
             return $this->sendError($ex->getMessage(), 'unable to delete role');
         }

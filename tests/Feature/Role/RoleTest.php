@@ -102,4 +102,29 @@ class RoleTest extends TestCase {
         $response->assertStatus(422)
             ->assertJsonPath('message', 'unable to fetch role');
     }
+
+    public function testUpdateARoleCorrectly(): void {
+        $user = $this->authUser();
+
+        $role = Role::factory()->create($this->roleData('student'));
+        $updatePayload = ['title' => 'guest'];
+
+        $response = $this->actingAs($user)
+            ->patch('/api/v1/roles/' . $role->id, $updatePayload);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('message', 'Successfully updated');
+    }
+
+    public function testDeleteARoleCorrectly(): void {
+        $user = $this->authUser();
+
+        $role = Role::factory()->create($this->roleData('student'));
+
+        $response = $this->actingAs($user)
+            ->delete('/api/v1/roles/' . $role->id);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('message', 'Role deleted successfully');
+    }
 }
