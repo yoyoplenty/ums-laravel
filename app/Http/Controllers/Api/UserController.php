@@ -36,9 +36,9 @@ class UserController extends ApiController {
 
     public function index() {
         try {
-            $roles = $this->userService->findAll();
+            $users = $this->userService->findAll();
 
-            return $this->sendResponse(UserResource::collection($roles), "successfully fetched users");
+            return $this->sendResponse(UserResource::collection($users), "successfully fetched users");
         } catch (Exception $ex) {
             return $this->sendError($ex->getMessage(), 'Error encountered', 500);
         }
@@ -81,7 +81,7 @@ class UserController extends ApiController {
 
             return $this->sendResponse(new UserResource($user));
         } catch (Exception $ex) {
-            return $this->sendError($ex->getMessage(), 'unable to fetch user', 500);
+            return $this->sendError($ex->getMessage(), 'unable to fetch user');
         }
     }
 
@@ -127,9 +127,9 @@ class UserController extends ApiController {
 
     public function update(UserFormRequest $request, $uuid) {
         try {
-            $user = $this->userService->updateUser($uuid, $request->validated());
+            $this->userService->updateUser($uuid, $request->validated());
 
-            return $this->sendResponse(new UserResource($user));
+            return $this->sendResponse(new UserResource(null), 'Successfully updated');
         } catch (Exception $ex) {
             return $this->sendError($ex->getMessage(), 'unable to update user details', 500);
         }
@@ -169,7 +169,7 @@ class UserController extends ApiController {
         try {
             $this->userService->deleteUser($uuid);
 
-            return $this->sendResponse(new UserResource(null, 'User deleted successfully'));
+            return $this->sendResponse(new UserResource(null), 'User deleted successfully');
         } catch (Exception $ex) {
             return $this->sendError($ex->getMessage(), 'unable to delete user details', 500);
         }

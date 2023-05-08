@@ -40,7 +40,7 @@ class UserFormRequest extends FormRequest {
                         'uuid' => 'required|exists:users,uuid',
                         'firstname' => 'sometimes|alpha|max:20|min:3',
                         'lastname' => 'sometimes|alpha|max:20|min:3',
-                        'middlename' => "sometimes|string|min:4|max:30",
+                        'middlename' => "sometimes|string|min:3|max:30",
                         'phone_number' => 'sometimes|string|min:11|max:15',
                     ];
                 }

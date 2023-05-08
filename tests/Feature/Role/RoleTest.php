@@ -60,7 +60,7 @@ class RoleTest extends TestCase {
             ->assertJsonPath('message', 'Unauthorized');
     }
 
-    public function testGetAllRoles(): void {
+    public function testGetAllRolesCorrectly(): void {
         $user = $this->authUser();
 
         $response = $this->actingAs($user)
@@ -79,7 +79,7 @@ class RoleTest extends TestCase {
             ->assertJsonPath('message', 'Unauthorized');
     }
 
-    public function testGetASingleRole(): void {
+    public function testGetASingleRoleCorrectly(): void {
         $user = $this->authUser();
 
         $role = Role::factory()->create($this->roleData('student'));
