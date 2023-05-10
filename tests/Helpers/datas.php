@@ -9,15 +9,18 @@ trait Datas {
     /**
      * Generates user Datas
      */
-    public function userData(int $roleId = 2) {
+    public function userData(int $roleId = 2, int $verification = 1) {
         return [
             'firstname' => fake()->name(),
             'lastname' => fake()->name(),
             'middlename' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'uuid' => fake()->uuid(),
-            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+            'password' => 'Password123',
+            'verified' => $verification,
             'role_id' => $roleId,
+            'verification_code' =>  mt_rand(1000000, 9999999),
+            'verification_code_generated_at' => now()
         ];
     }
 

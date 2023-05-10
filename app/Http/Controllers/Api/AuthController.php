@@ -48,9 +48,9 @@ class AuthController extends ApiController {
         try {
             $data = $this->authService->register($request->all());
 
-            return $this->sendResponse($data, "successfully registered user");
+            return $this->sendResponse($data, "successfully registered user", 201);
         } catch (Exception $ex) {
-            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
+            return $this->sendError($ex->getMessage(), 'Error encountered');
         }
     }
 
@@ -86,7 +86,7 @@ class AuthController extends ApiController {
 
             return $this->sendResponse($data, "successfully logged in user");
         } catch (Exception $ex) {
-            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
+            return $this->sendError($ex->getMessage(), 'Error encountered');
         }
     }
 
@@ -131,7 +131,7 @@ class AuthController extends ApiController {
 
             return $this->sendResponse($data, "successfully verified user");
         } catch (Exception $ex) {
-            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
+            return $this->sendError($ex->getMessage(), 'Error encountered');
         }
     }
 
@@ -169,7 +169,7 @@ class AuthController extends ApiController {
 
             return $this->sendResponse($data, "successfully resent email");
         } catch (Exception $ex) {
-            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
+            return $this->sendError($ex->getMessage(), 'Error encountered');
         }
     }
 
@@ -236,7 +236,7 @@ class AuthController extends ApiController {
 
             return $this->sendResponse($data, "Password reset successful");
         } catch (Exception $ex) {
-            return $this->sendError($ex->getMessage(), 'Error encountered', 500);
+            return $this->sendError($ex->getMessage(), 'Error encountered');
         }
     }
 
