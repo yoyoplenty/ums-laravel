@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-undefined
-vendor/bin/phpunit -- testsuite Feature Tests
+npx lint-staged
+vendor/bin/phpunit --testsuite=Feature --stop-on-failure
